@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dino Run Game</title>
+<link rel="stylesheet" href="styles.css" />
+<style>
+    body{
+        margin:0;
+        font-family:Arial, sans-serif;
+        overflow:hidden;
+        background:linear-gradient(135deg,#0f172a,#1d4ed8,#22c55e);
+        color:white;
+    }
+
+    .screen{
+        width:100vw;
+        height:100vh;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        flex-direction:column;
+        text-align:center;
+    }
+
+    .hidden{
+        display:none;
+    }
+
+    .front-page{
+        background:radial-gradient(circle at top,#38bdf8,#1d4ed8 45%,#0f172a 100%);
+    }
+
+    .title{
+        font-size:4rem;
+        margin-bottom:10px;
+        text-shadow:0 6px 20px rgba(0,0,0,0.35);
+    }
+
+    .subtitle{
+        font-size:1.2rem;
+        max-width:600px;
+        margin-bottom:30px;
+        line-height:1.6;
+    }
+
+    .start-btn{
+        padding:16px 36px;
+        font-size:1.2rem;
+        border:none;
+        border-radius:14px;
+        cursor:pointer;
+        background:linear-gradient(135deg,#f97316,#ef4444);
+        color:white;
+        box-shadow:0 10px 25px rgba(0,0,0,0.25);
+        transition:transform 0.2s ease;
+    }
+
+    .start-btn:hover{
+        transform:scale(1.05);
+    }
+
+    .game-page{
+        background:linear-gradient(180deg,#87ceeb 0%,#b7f7ff 60%,#9be15d 100%);
+        position:relative;
+        overflow:hidden;
+    }
+
+    .game-area{
+        position:relative;
+        width:100%;
+        height:100%;
+    }
+
+    .ground{
+        position:absolute;
+        bottom:0;
+        left:0;
+        width:100%;
+        height:120px;
+        background:linear-gradient(180deg,#8b5a2b,#6b3f1d);
+    }
+
+    .dino{
+        position:absolute;
+        left:80px;
+        bottom:120px;
+        width:70px;
+        height:70px;
+        font-size:4rem;
+        transform:translateY(0);
+        transition:transform 0.1s;
+        user-select:none;
+    }
+
+    .obstacle{
+        position:absolute;
+        bottom:120px;
+        right:-60px;
+        width:40px;
+        height:80px;
+        background:#16a34a;
+        border-radius:8px;
+    }
+
+    .cloud{
+        position:absolute;
+        top:80px;
+        font-size:3rem;
+        opacity:0.8;
+        animation:moveCloud 15s linear infinite;
+    }
+
+    .cloud.two{
+        top:140px;
+        animation-duration:20s;
+    }
+
+    @keyframes moveCloud{
+        from{ left:-120px; }
+        to{ left:100%; }
+    }
+
+    .score{
+        position:absolute;
+        top:20px;
+        left:20px;
+        font-size:1.3rem;
+        background:rgba(255,255,255,0.3);
+        padding:10px 16px;
+        border-radius:12px;
+        color:#0f172a;
+        font-weight:bold;
+    }
+
+    .game-over{
+        position:absolute;
+        top:50%;
+        left:50%;
+        transform:translate(-50%,-50%);
+        font-size:2rem;
+        background:rgba(0,0,0,0.55);
+        padding:20px 30px;
+        border-radius:16px;
+        display:none;
+    }
+</style>
+</head>
+<body>
+
+<div id="frontPage" class="screen front-page">
+    <h1 class="title">Dino Run</h1>
+    <p class="subtitle">
+        A colorful 2D Dino Run game. Click start to enter the game and play.
+    </p>
+    <button class="start-btn" onclick="startGame()">Start Game</button>
+</div>
+
+<div id="gamePage" class="screen game-page hidden">
+    <div class="game-area" id="gameArea">
+        <div class="score">Score: <span id="score">0</span></div>
+        <div class="cloud">☁️</div>
+        <div class="cloud two">☁️</div>
+        <div class="dino" id="dino">🦖</div>
+        <div class="obstacle" id="obstacle"></div>
+        <div class="ground"></div>
+        <div class="game-over" id="gameOver">Game Over</div>
+    </div>
+</div>
+
+<script>
+let score = 0;
+let gameRunning = false;
+let isJumping = false;
+let obstacleLeft = window.innerWidth;
+let jumpHeight = 0;
+
+const frontPage = document.getElementById('frontPage');
+const gamePage = document.getElementById('gamePage');
+const dino = document.getElementById('dino');
+const obstacle = document.getElementById('obstacle');
+const scoreText = document.getElementById('score');
+const gameOver = document.getElementById('gameOver');
+
+function startGame(){
+    frontPage.classList.add('hidden');
+    gamePage.classList.remove('hidden');
+    gameRunning = true;
+    score = 0;
+    scoreText.textContent = score;
+    obstacleLeft = window.innerWidth;
+    obstacle.style.right = '-60px';
+    gameOver.style.display = 'none';
+    gameLoop();
+}
+
+function jump(){
+    if(isJumping || !gameRunning) return;
+    isJumping = true;
+    let up = 0;
+    const jumpUp = setInterval(() => {
+        up += 10;
+        dino.style.bottom = (120 + up) + 'px';
+        if(up >= 120){
+            clearInterval(jumpUp);
+            const jumpDown = setInterval(() => {
+                up -= 10;
+                dino.style.bottom = (120 + up) + 'px';
+                if(up <= 0){
+                    clearInterval(jumpDown);
+                    isJumping = false;
+                    dino.style.bottom = '120px';
+                }
+            }, 20);
+        }
+    }, 20);
+}
+
+document.addEventListener('keydown', function(e){
+    if(e.code === 'Space' || e.code === 'ArrowUp') jump();
+});
+
+document.addEventListener('touchstart', jump);
+
+function gameLoop(){
+    if(!gameRunning) return;
+
+    obstacleLeft -= 8;
+    obstacle.style.right = 'auto';
+    obstacle.style.left = obstacleLeft + 'px';
+
+    const dinoRect = dino.getBoundingClientRect();
+    const obstacleRect = obstacle.getBoundingClientRect();
+
+    if(
+        dinoRect.left < obstacleRect.right &&
+        dinoRect.right > obstacleRect.left &&
+        dinoRect.top < obstacleRect.bottom &&
+        dinoRect.bottom > obstacleRect.top
+    ){
+        gameRunning = false;
+        gameOver.style.display = 'block';
+        return;
+    }
+
+    if(obstacleLeft < -60){
+        obstacleLeft = window.innerWidth + 200;
+        score++;
+        scoreText.textContent = score;
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+</script>
+
+</body>
+</html>
