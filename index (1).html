@@ -4,8 +4,10 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Dino Run Game</title>
-<link rel="stylesheet" href="styles.css" />
 <style>
+    *{
+        box-sizing:border-box;
+    }
     body{
         margin:0;
         font-family:Arial, sans-serif;
@@ -13,7 +15,6 @@
         background:linear-gradient(135deg,#0f172a,#1d4ed8,#22c55e);
         color:white;
     }
-
     .screen{
         width:100vw;
         height:100vh;
@@ -23,28 +24,24 @@
         flex-direction:column;
         text-align:center;
     }
-
     .hidden{
         display:none;
     }
-
     .front-page{
         background:radial-gradient(circle at top,#38bdf8,#1d4ed8 45%,#0f172a 100%);
     }
-
     .title{
         font-size:4rem;
         margin-bottom:10px;
         text-shadow:0 6px 20px rgba(0,0,0,0.35);
     }
-
     .subtitle{
         font-size:1.2rem;
         max-width:600px;
         margin-bottom:30px;
         line-height:1.6;
+        padding:0 20px;
     }
-
     .start-btn{
         padding:16px 36px;
         font-size:1.2rem;
@@ -56,23 +53,19 @@
         box-shadow:0 10px 25px rgba(0,0,0,0.25);
         transition:transform 0.2s ease;
     }
-
     .start-btn:hover{
         transform:scale(1.05);
     }
-
     .game-page{
         background:linear-gradient(180deg,#87ceeb 0%,#b7f7ff 60%,#9be15d 100%);
         position:relative;
         overflow:hidden;
     }
-
     .game-area{
         position:relative;
         width:100%;
         height:100%;
     }
-
     .ground{
         position:absolute;
         bottom:0;
@@ -81,7 +74,6 @@
         height:120px;
         background:linear-gradient(180deg,#8b5a2b,#6b3f1d);
     }
-
     .dino{
         position:absolute;
         left:80px;
@@ -89,21 +81,17 @@
         width:70px;
         height:70px;
         font-size:4rem;
-        transform:translateY(0);
-        transition:transform 0.1s;
         user-select:none;
     }
-
     .obstacle{
         position:absolute;
         bottom:120px;
-        right:-60px;
         width:40px;
         height:80px;
         background:#16a34a;
         border-radius:8px;
+        left:100vw;
     }
-
     .cloud{
         position:absolute;
         top:80px;
@@ -111,17 +99,14 @@
         opacity:0.8;
         animation:moveCloud 15s linear infinite;
     }
-
     .cloud.two{
         top:140px;
         animation-duration:20s;
     }
-
     @keyframes moveCloud{
         from{ left:-120px; }
         to{ left:100%; }
     }
-
     .score{
         position:absolute;
         top:20px;
@@ -132,8 +117,8 @@
         border-radius:12px;
         color:#0f172a;
         font-weight:bold;
+        z-index:2;
     }
-
     .game-over{
         position:absolute;
         top:50%;
@@ -144,6 +129,7 @@
         padding:20px 30px;
         border-radius:16px;
         display:none;
+        z-index:3;
     }
 </style>
 </head>
@@ -151,9 +137,7 @@
 
 <div id="frontPage" class="screen front-page">
     <h1 class="title">Dino Run</h1>
-    <p class="subtitle">
-        A colorful 2D Dino Run game. Click start to enter the game and play.
-    </p>
+    <p class="subtitle">A colorful 2D Dino Run game. Click start to enter the game and play.</p>
     <button class="start-btn" onclick="startGame()">Start Game</button>
 </div>
 
@@ -173,8 +157,7 @@
 let score = 0;
 let gameRunning = false;
 let isJumping = false;
-let obstacleLeft = window.innerWidth;
-let jumpHeight = 0;
+let obstacleX = window.innerWidth;
 
 const frontPage = document.getElementById('frontPage');
 const gamePage = document.getElementById('gamePage');
@@ -189,10 +172,10 @@ function startGame(){
     gameRunning = true;
     score = 0;
     scoreText.textContent = score;
-    obstacleLeft = window.innerWidth;
-    obstacle.style.right = '-60px';
+    obstacleX = window.innerWidth;
+    obstacle.style.left = obstacleX + 'px';
     gameOver.style.display = 'none';
-    gameLoop();
+    requestAnimationFrame(gameLoop);
 }
 
 function jump(){
@@ -220,15 +203,13 @@ function jump(){
 document.addEventListener('keydown', function(e){
     if(e.code === 'Space' || e.code === 'ArrowUp') jump();
 });
-
 document.addEventListener('touchstart', jump);
 
 function gameLoop(){
     if(!gameRunning) return;
 
-    obstacleLeft -= 8;
-    obstacle.style.right = 'auto';
-    obstacle.style.left = obstacleLeft + 'px';
+    obstacleX -= 8;
+    obstacle.style.left = obstacleX + 'px';
 
     const dinoRect = dino.getBoundingClientRect();
     const obstacleRect = obstacle.getBoundingClientRect();
@@ -244,8 +225,8 @@ function gameLoop(){
         return;
     }
 
-    if(obstacleLeft < -60){
-        obstacleLeft = window.innerWidth + 200;
+    if(obstacleX < -60){
+        obstacleX = window.innerWidth + 200;
         score++;
         scoreText.textContent = score;
     }
